@@ -1,4 +1,5 @@
 # focal_loss_pytorch
+python version: python3.6   
 Objective：focal_loss.py is created for caculate pixel-wise  focal loss    
 Attention: the code hasn't been used to train network   
 Paper:https://arxiv.org/pdf/1708.02002.pdf    
