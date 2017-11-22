@@ -8,3 +8,4 @@ Thanks to https://github.com/clcarwin/focal_loss_pytorch
 How to test: run "python3 focal_loss.py" in shell   
 ToDo:   
 - use the code to train network
+- figure out whether FocalLoss is numerically stable
