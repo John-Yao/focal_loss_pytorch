@@ -59,22 +59,38 @@ class FocalLoss(nn.Module):
         logpt = F.log_softmax(input) # N*H*W,C
         logpt = logpt.gather(1,target)
         logpt = logpt.view(-1)
-        pt = nn.Softmax()(input) #torch.Size([192, 32])
-        pt = pt.gather(1,target)
+        pt = nn.Softmax()(input) #N*H*W,C
+        pt = pt.gather(1,target).view(-1)
         if self.alpha is not None:
-            at = self.alpha.gather(1,target)
+            at = self.alpha.gather(1,target).view(-1)
             logpt = logpt * at
-
         loss = -1 * (1-pt)**self.gamma * logpt
         if self.size_average: return loss.mean()
         else: return loss.sum()
 if __name__ == '__main__':
     from loss import CrossEntropyLoss2d
     import numpy as np
-    max_error  = 0
     seed=17*19
     np.random.seed()
     torch.initial_seed()
+#test for size_average = False:
+    max_error  = 0
+    for i in range(1000):
+
+        m = nn.Conv2d(16, 4, (3, 3))
+        # input is of size N x C x height x width
+        input = autograd.Variable(torch.randn(3, 16, 10, 10))
+        # each element in target has to have 0 <= value < C
+        target = autograd.Variable(torch.LongTensor(3, 8, 8).random_(0, 4))
+        loss = FocalLoss(gamma=0,alpha =1,size_average=False)
+        output1 = loss(m(input), target)
+        output1.backward()
+
+        loss = CrossEntropyLoss2d(size_average=False)
+        output2 = loss(m(input), target)
+        if abs(output2.data[0]-output1.data[0])>max_error:  max_error = abs(output2.data[0]-output1.data[0])
+    print(max_error)
+    max_error  = 0
 #cpu version:
     for i in range(1000):
         m = nn.Conv2d(16, 4, (3, 3))
@@ -84,7 +100,6 @@ if __name__ == '__main__':
         target = autograd.Variable(torch.LongTensor(3, 8, 8).random_(0, 4))
         loss = FocalLoss(gamma=0,alpha=1)
         output1 = loss(m(input), target)
-
 
         loss = CrossEntropyLoss2d()
         output2 = loss(m(input), target)
